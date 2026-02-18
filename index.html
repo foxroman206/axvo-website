@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LendFlow — 全球智能點對點借貸平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white: #FFFFFF;
+    --bg: #F8FAFB;
+    --bg-secondary: #EFF3F6;
+    --text: #1A2332;
+    --text-light: #64748B;
+    --text-muted: #94A3B8;
+    
+    --primary: #0EA5E9;
+    --primary-light: #38BDF8;
+    --primary-dark: #0284C7;
+    --primary-bg: #E0F2FE;
+    
+    --success: #10B981;
+    --success-light: #34D399;
+    --success-bg: #D1FAE5;
+    
+    --warning: #F59E0B;
+    --warning-light: #FBBF24;
+    --warning-bg: #FEF3C7;
+    
+    --danger: #EF4444;
+    --danger-light: #F87171;
+    --danger-bg: #FEE2E2;
+    
+    --border: #E2E8F0;
+    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  
+  body {
+    font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,h2,h3,h4,h5,h6 { font-family: 'Manrope', 'Noto Sans TC', sans-serif; font-weight: 700; }
+  
+  /* Language Toggle */
+  .lang-toggle {
+    display: flex; gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .lang-btn {
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-btn:hover { color: var(--text); }
+  .lang-btn.active {
+    background: var(--primary);
+    color: white;
+  }
+  .mono { font-family: 'Fira Code', monospace; }
+
+  /* ═══ MARKET ANALYSIS (Stock-like) ═══ */
+  .market-ticker {
+    background: linear-gradient(135deg, var(--primary-bg), var(--success-bg));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+  .ticker-item {
+    text-align: center;
+  }
+  .ticker-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .ticker-value {
+    font-family: 'Manrope', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .ticker-change {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .ticker-change.up {
+    color: var(--success);
+  }
+  .ticker-change.up::before { content: '▲ '; }
+  .ticker-change.down {
+    color: var(--danger);
+  }
+  .ticker-change.down::before { content: '▼ '; }
+
+  /* Candlestick Chart */
+  .chart-container {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .chart-timeframe {
+    display: flex;
+    gap: 4px;
+  }
+  .tf-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tf-btn:hover { background: var(--bg); }
+  .tf-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+  
+  .candlestick-chart {
+    display: flex;
+    gap: 4px;
+    height: 200px;
+    align-items: flex-end;
+    position: relative;
+    padding: 0 8px;
+  }
+  .candle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+  }
+  .candle-wick {
+    width: 2px;
+    background: var(--text-muted);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .candle-body {
+    width: 100%;
+    border-radius: 2px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .candle-body.bullish {
+    background: var(--success);
+    border: 1px solid #059669;
+  }
+  .candle-body.bearish {
+    background: var(--danger);
+    border: 1px solid #DC2626;
+  }
+  .candle:hover .candle-body {
+    opacity: 0.8;
+    transform: scaleX(1.2);
+  }
+
+  /* Volume bars */
+  .volume-chart {
+    display: flex;
+    gap: 4px;
+    height: 40px;
+    align-items: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .volume-bar {
+    flex: 1;
+    background: var(--primary-bg);
+    border-radius: 2px 2px 0 0;
+    transition: background 0.2s;
+  }
+  .volume-bar.high { background: var(--primary); }
+  .volume-bar:hover { background: var(--primary-light); }
+
+  /* AI Market Insights */
+  .ai-insights {
+    background: linear-gradient(135deg, var(--success-bg), var(--primary-bg));
+    border: 1px solid var(--success);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .ai-insights-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .ai-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--success);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .ai-insights-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #047857;
+  }
+  .insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .insight-item {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .insight-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .insight-value {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .insight-desc {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* Market Sentiment Gauge */
+  .sentiment-gauge {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .gauge-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .gauge-visual {
+    width: 100%;
+    height: 12px;
+    background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+    border-radius: 100px;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .gauge-pointer {
+    position: absolute;
+    top: -4px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 3px solid var(--text);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    transition: left 0.5s ease;
+  }
+  .gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .sentiment-value {
+    font-size: 20px;
+    font-weight: 800;
+    margin-top: 8px;
+  }
+
+  /* Real-time order book style */
+  .orderbook {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .orderbook-header {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-light);
+  }
+  .orderbook-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 12px;
+    font-family: 'Fira Code', monospace;
+    border-bottom: 1px solid var(--bg);
+    position: relative;
+  }
+  .orderbook-row:last-child { border-bottom: none; }
+  .orderbook-rate { color: var(--text); font-weight: 600; }
+  .orderbook-amount { color: var(--text-light); text-align: right; }
+  .orderbook-total { color: var(--text-muted); text-align: right; }
+  .orderbook-row.ask .orderbook-rate { color: var(--danger); }
+  .orderbook-row.bid .orderbook-rate { color: var(--success); }
+  .orderbook-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--success-bg);
+    opacity: 0.3;
+    z-index: -1;
+  }
+  .orderbook-row.ask::before { background: var(--danger-bg); }
+
+  /* Depth chart */
+  .depth-chart {
+    display: flex;
+    height: 100px;
+    position: relative;
+    margin-top: 12px;
+  }
+  .depth-area {
+    flex: 1;
+    position: relative;
+  }
+  .depth-area.bids {
+    background: linear-gradient(to right, transparent, var(--success-bg));
+  }
+  .depth-area.asks {
+    background: linear-gradient(to left, transparent, var(--danger-bg));
+  }
+
+  /* ═══ NAV ═══ */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    height: 72px;
+  }
+  .nav-inner {
+    max-width: 1280px; margin: 0 auto; padding: 0 24px;
+    height: 100%; display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 24px;
+    letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px;
+  }
+  .nav-links {
+    display: flex; gap: 32px; list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none; color: var(--text-light);
+    font-size: 15px; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-actions { display: flex; gap: 12px; }
+
+  /* ═══ BUTTONS ═══ */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-lg { padding: 14px 28px; font-size: 16px; }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+  
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+  .btn-success:hover {
+    background: #059669;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+  
+  .btn-outline {
+    background: white;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover {
+    background: var(--bg);
+    border-color: var(--text-light);
+  }
+  
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-light);
+  }
+  .btn-ghost:hover {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* ═══ BADGES ═══ */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 100px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-primary { background: var(--primary-bg); color: var(--primary-dark); }
+  .badge-success { background: var(--success-bg); color: #047857; }
+  .badge-warning { background: var(--warning-bg); color: #B45309; }
+  .badge-danger { background: var(--danger-bg); color: #B91C1C; }
+  .badge-neutral { background: var(--bg-secondary); color: var(--text-light); }
+
+  /* ═══ HERO ═══ */
+  .hero {
+    background: linear-gradient(180deg, var(--white) 0%, var(--bg) 100%);
+    padding: 80px 24px 100px;
+  }
+  .hero-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: 1.1fr 0.9fr;
+    gap: 64px; align-items: center;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--primary-bg); color: var(--primary-dark);
+    padding: 6px 14px; border-radius: 100px;
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .hero-tag .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
+  }
+  
+  .hero h1 {
+    font-size: clamp(40px, 5vw, 56px);
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .hero h1 .gradient {
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-desc {
+    font-size: 18px;
+    color: var(--text-light);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 540px;
+  }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 48px; }
+  
+  .hero-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 32px; padding-top: 32px; border-top: 1px solid var(--border);
+  }
+  .stat-val {
+    font-family: 'Manrope', sans-serif;
+    font-size: 32px; font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-label {
+    font-size: 13px; color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ═══ HERO CARD ═══ */
+  .hero-visual { position: relative; }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-xl);
+  }
+  .card-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .rate-display {
+    text-align: center;
+    padding: 20px 0;
+    background: linear-gradient(135deg, var(--bg) 0%, var(--white) 100%);
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .rate-value {
+    font-family: 'Manrope', sans-serif;
+    font-size: 56px; font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .rate-label {
+    font-size: 12px; color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .mini-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .mini-stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .mini-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .mini-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  /* ═══ SECTION ═══ */
+  section { padding: 80px 24px; }
+  .section-header {
+    max-width: 720px;
+    margin: 0 auto 64px;
+    text-align: center;
+  }
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--primary-bg);
+    color: var(--primary-dark);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .section-header h2 {
+    font-size: clamp(32px, 4vw, 44px);
+    line-height: 1.2;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .section-header p {
+    font-size: 17px;
+    color: var(--text-light);
+    line-height: 1.7;
+  }
+
+  /* ═══ FLOW SECTION ═══ */
+  .flow-section { background: white; }
+  .flow-tabs {
+    display: flex; gap: 8px;
+    max-width: 1280px; margin: 0 auto 48px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .flow-tab {
+    padding: 10px 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .flow-tab:hover {
+    background: var(--bg-secondary);
+    color: var(--text);
+  }
+  .flow-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .flow-grid {
+    max-width: 1280px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+    position: relative;
+  }
+  .flow-step {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s;
+  }
+  .flow-step:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  .flow-icon {
+    width: 56px; height: 56px;
+    border-radius: 12px;
+    background: var(--primary-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+  }
+  .flow-step.success .flow-icon { background: var(--success-bg); }
+  .flow-step.warning .flow-icon { background: var(--warning-bg); }
+  
+  .flow-num {
+    position: absolute;
+    top: -12px; left: 12px;
+    width: 28px; height: 28px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    border: 3px solid white;
+  }
+  .flow-title {
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .flow-desc {
+    font-size: 13px;
+    color: var(--text-light);
+    line-height: 1.6;
+  }
+
+  .flow-panel { display: none; }
+  .flow-panel.active { display: block; }
+
+  /* ═══ PAGES GRID ═══ */
+  .pages-grid {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; gap: 32px;
+  }
+  .page-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .page-full { grid-column: 1 / -1; }
+  
+  .page-mockup {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+  }
+  .page-mockup:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+  }
+  
+  .mockup-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #FF5F57; }
+  .dot-yellow { background: #FFBD2E; }
+  .dot-green { background: #28C840; }
+  .mockup-url {
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 12px;
+  }
+  
+  .mockup-tag {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  
+  .mockup-content {
+    padding: 24px;
+    min-height: 260px;
+  }
+
+  /* Dashboard styles */
+  .mock-header {
+    display: flex; justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-title { font-size: 20px; font-weight: 700; }
+  .mock-subtitle { font-size: 13px; color: var(--text-light); }
+  
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .kpi-change {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .kpi-change.up { color: var(--success); }
+  .kpi-change.down { color: var(--danger); }
+
+  /* Chart */
+  .chart-area {
+    display: flex;
+    gap: 4px;
+    height: 80px;
+    align-items: flex-end;
+    margin-top: 16px;
+  }
+  .chart-bar {
+    flex: 1;
+    background: var(--primary-bg);
+    border-radius: 4px 4px 0 0;
+    transition: background 0.2s;
+  }
+  .chart-bar:hover { background: var(--primary-light); }
+
+  /* Loan cards */
+  .loan-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .loan-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+  }
+  .loan-borrower {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .loan-meta {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+  .loan-rate {
+    text-align: right;
+  }
+  .loan-rate-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  
+  /* Progress */
+  .progress-bar {
+    height: 6px;
+    background: var(--bg-secondary);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 100px;
+  }
+
+  /* Score display */
+  .score-section {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 24px;
+  }
+  .score-card {
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    color: white;
+  }
+  .score-number {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .score-grade {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 8px;
+  }
+  .score-percentile {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+  
+  .factors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .factor-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .factor-label {
+    font-size: 13px;
+    color: var(--text-light);
+    min-width: 120px;
+  }
+  .factor-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .factor-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 100px;
+  }
+  .factor-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* User flows */
+  .flows-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .flow-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .flow-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .flow-card-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--primary-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .flow-card-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .flow-card-subtitle {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+  
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .step-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-item:last-child { border-bottom: none; }
+  
+  .step-number {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-bg);
+    color: var(--primary-dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .step-desc {
+    font-size: 12px;
+    color: var(--text-light);
+    line-height: 1.5;
+  }
+  .step-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 100px;
+    margin-left: auto;
+    align-self: flex-start;
+  }
+  .tag-user { background: var(--primary-bg); color: var(--primary-dark); }
+  .tag-ai { background: var(--success-bg); color: #047857; }
+  .tag-system { background: var(--bg-secondary); color: var(--text-light); }
+
+  /* Engine section */
+  .engine-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .formula-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .formula-card h3 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  .code-block {
+    background: var(--text);
+    color: #E0F2FE;
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .code-fn { color: var(--success-light); }
+  .code-var { color: var(--primary-light); }
+  .code-num { color: var(--warning-light); }
+  .code-comment { color: var(--text-muted); }
+  
+  .grade-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .grade-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 6px;
+  }
+  .grade-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .grade-A { background: var(--success-bg); color: #047857; }
+  .grade-B { background: var(--warning-bg); color: #B45309; }
+  .grade-C { background: var(--danger-bg); color: #B91C1C; }
+  .grade-range {
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .weights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .weight-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .weight-label {
+    font-size: 13px;
+    color: var(--text-light);
+    min-width: 140px;
+  }
+  .weight-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .weight-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 100px;
+  }
+  .weight-pct {
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* Footer */
+  footer {
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 64px 24px 32px;
+  }
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+  .footer-brand { max-width: 320px; }
+  .footer-logo {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-desc {
+    font-size: 14px;
+    color: var(--text-light);
+    line-height: 1.7;
+  }
+  .footer-col h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .footer-col ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .footer-col a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: 14px;
+    transition: color 0.2s;
+  }
+  .footer-col a:hover { color: var(--text); }
+  
+  .footer-bottom {
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-legal {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .footer-badges {
+    display: flex;
+    gap: 12px;
+  }
+  .security-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-light);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.6s ease-out; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  /* Responsive */
+  @media (max-width: 968px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+    .page-row { grid-template-columns: 1fr; }
+    .flows-grid { grid-template-columns: 1fr; }
+    .engine-grid { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .nav-links { display: none; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .flow-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-icon">🌊</div>
+      <span data-zh="資金流" data-en="LendFlow">LendFlow</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#how" data-zh="運作原理" data-en="How It Works">How It Works</a></li>
+      <li><a href="#market" data-zh="即時行情" data-en="Live Market">Live Market</a></li>
+      <li><a href="#pages" data-zh="平台介面" data-en="Platform">Platform</a></li>
+      <li><a href="#engine" data-zh="利率引擎" data-en="Rate Engine">Rate Engine</a></li>
+    </ul>
+    <div class="nav-actions">
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" onclick="switchLang('zh')">中文</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-zh="登入" data-en="Sign In">Sign In</button>
+      <button class="btn btn-primary btn-sm" data-zh="立即開始" data-en="Get Started">Get Started</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag">
+        <div class="dot"></div>
+        <span data-zh="即時 AI 撮合 · 全球平台" data-en="Live AI Matching · Global Platform">Live AI Matching · Global Platform</span>
+      </div>
+      <h1>
+        <span data-zh="智能點對點借貸" data-en="Intelligent P2P Lending">Intelligent P2P Lending</span><br>
+        <span class="gradient" data-zh="AI 驅動全球金融" data-en="Powered by AI">Powered by AI</span>
+      </h1>
+      <p class="hero-desc" data-zh="全球點對點借貸平台,直接連接放款人與借款人。AI 驅動信用評分、動態利率調整、即時撮合,為個人與中小企業提供透明高效的融資方案。利率區間 6-18%。" data-en="Global peer-to-peer lending platform connecting lenders and borrowers directly. AI-driven credit scoring, dynamic interest rates (6-18%), and instant matching for both personal and SME loans.">
+        Global peer-to-peer lending platform connecting lenders and borrowers directly. AI-driven credit scoring, dynamic interest rates (6-18%), and instant matching for both personal and SME loans.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-lg" data-zh="放款賺收益 →" data-en="Lend & Earn →">Lend & Earn →</button>
+        <button class="btn btn-outline btn-lg" data-zh="申請借款" data-en="Apply for Loan">Apply for Loan</button>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-val">$8.4B</div>
+          <div class="stat-label" data-zh="總撮合金額" data-en="Total Loans Funded">Total Loans Funded</div>
+        </div>
+        <div>
+          <div class="stat-val">142K</div>
+          <div class="stat-label" data-zh="全球活躍用戶" data-en="Active Users Globally">Active Users Globally</div>
+        </div>
+        <div>
+          <div class="stat-val">9.2%</div>
+          <div class="stat-label" data-zh="平均放款回報" data-en="Avg. Lender Return">Avg. Lender Return</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" data-zh="即時市場利率" data-en="LIVE MARKET RATE">LIVE MARKET RATE</div>
+          </div>
+          <div class="badge badge-success"><span data-zh="● 市場活躍" data-en="● Active">● Active</span></div>
+        </div>
+        <div class="rate-display">
+          <div class="rate-value">9.5%</div>
+          <div class="rate-label" data-zh="年利率 · A 級借款人 · 即時報價" data-en="Annual Interest Rate · Grade A Borrowers · Live Quote">Annual Interest Rate · Grade A Borrowers · Live Quote</div>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label" data-zh="放款人回報" data-en="Lender Returns">Lender Returns</div>
+            <div class="mini-stat-value" style="color: var(--success);">+8.1%</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label" data-zh="違約風險" data-en="Default Risk">Default Risk</div>
+            <div class="mini-stat-value" style="color: var(--danger);">1.4%</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label" data-zh="待撮合標的" data-en="Pending Loans">Pending Loans</div>
+            <div class="mini-stat-value" style="color: var(--primary);">$18.2M</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label" data-zh="今日成交" data-en="Today's Matches">Today's Matches</div>
+            <div class="mini-stat-value">347</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ LIVE MARKET ANALYSIS ══════════════════ -->
+<section id="market" style="background: white; padding: 60px 24px;">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="section-header" style="margin-bottom: 40px;">
+      <div class="section-tag"><span data-zh="● 即時市場分析" data-en="● Live Market Analysis">● Live Market Analysis</span></div>
+      <h2><span data-zh="借貸利率即時行情" data-en="Real-Time Lending Rates">Real-Time Lending Rates</span></h2>
+      <p data-zh="如同股票技術分析,追蹤利率波動、成交量、市場情緒。AI 即時評估供需狀況,幫助您做出最佳決策。" data-en="Like stock technical analysis, track rate fluctuations, trading volume, and market sentiment. AI real-time supply-demand assessment helps you make optimal decisions.">Like stock technical analysis, track rate fluctuations, trading volume, and market sentiment. AI real-time supply-demand assessment helps you make optimal decisions.</p>
+    </div>
+
+    <!-- Market Ticker -->
+    <div class="market-ticker">
+      <div class="ticker-item">
+        <div class="ticker-label" data-zh="A級平均利率" data-en="GRADE A AVG">GRADE A AVG</div>
+        <div class="ticker-value" style="color: var(--success);">9.2%</div>
+        <div class="ticker-change up" data-zh="+0.3% 24小時" data-en="+0.3% 24h">+0.3% 24h</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label" data-zh="B級平均利率" data-en="GRADE B AVG">GRADE B AVG</div>
+        <div class="ticker-value" style="color: var(--warning);">13.5%</div>
+        <div class="ticker-change down" data-zh="-0.1% 24小時" data-en="-0.1% 24h">-0.1% 24h</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label" data-zh="C級平均利率" data-en="GRADE C AVG">GRADE C AVG</div>
+        <div class="ticker-value" style="color: var(--danger);">16.8%</div>
+        <div class="ticker-change up" data-zh="+0.5% 24小時" data-en="+0.5% 24h">+0.5% 24h</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label" data-zh="24小時成交量" data-en="24H VOLUME">24H VOLUME</div>
+        <div class="ticker-value" style="color: var(--primary);">$84.2M</div>
+        <div class="ticker-change up" data-zh="+12.4%" data-en="+12.4%">+12.4%</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label" data-zh="活躍標的" data-en="ACTIVE LOANS">ACTIVE LOANS</div>
+        <div class="ticker-value">1,247</div>
+        <div class="ticker-change up" data-zh="+86 今日" data-en="+86 today">+86 today</div>
+      </div>
+    </div>
+
+    <!-- Chart and Analysis Grid -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 24px;">
+      <!-- Candlestick Chart -->
+      <div>
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-title" data-zh="利率走勢圖 (A級借款人)" data-en="Rate Trend (Grade A Borrowers)">Rate Trend (Grade A Borrowers)</div>
+            <div class="chart-timeframe">
+              <button class="tf-btn" data-zh="1天" data-en="1D">1D</button>
+              <button class="tf-btn" data-zh="1周" data-en="1W">1W</button>
+              <button class="tf-btn active" data-zh="1月" data-en="1M">1M</button>
+              <button class="tf-btn" data-zh="3月" data-en="3M">3M</button>
+              <button class="tf-btn" data-zh="1年" data-en="1Y">1Y</button>
+            </div>
+          </div>
+          <div class="candlestick-chart" id="candleChart">
+            <!-- Candles will be generated by JS -->
+          </div>
+          <div class="volume-chart" id="volumeChart">
+            <!-- Volume bars will be generated by JS -->
+          </div>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="ai-insights">
+          <div class="ai-insights-header">
+            <div class="ai-icon">🤖</div>
+            <div>
+              <div class="ai-insights-title" data-zh="AI 即時市場評估" data-en="AI Real-Time Market Assessment">AI Real-Time Market Assessment</div>
+              <div style="font-size: 11px; color: #047857;" data-zh="最後更新: 2分鐘前" data-en="Last updated: 2 min ago">Last updated: 2 min ago</div>
+            </div>
+          </div>
+          <div class="insights-grid">
+            <div class="insight-item">
+              <div class="insight-label" data-zh="市場趨勢" data-en="MARKET TREND">MARKET TREND</div>
+              <div class="insight-value" style="color: var(--success);" data-zh="看漲" data-en="Bullish">Bullish</div>
+              <div class="insight-desc" data-zh="放款需求強勁,利率預計持續上升 0.2-0.4% 本週" data-en="Strong lending demand, rates expected to rise 0.2-0.4% this week">Strong lending demand, rates expected to rise 0.2-0.4% this week</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-label" data-zh="供需比" data-en="SUPPLY/DEMAND">SUPPLY/DEMAND</div>
+              <div class="insight-value" style="color: var(--warning);">0.72</div>
+              <div class="insight-desc" data-zh="借款需求大於放款供給,有利放款人" data-en="Borrowing demand exceeds lending supply, favorable for lenders">Borrowing demand exceeds lending supply, favorable for lenders</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-label" data-zh="最佳進場時機" data-en="OPTIMAL ENTRY">OPTIMAL ENTRY</div>
+              <div class="insight-value" style="color: var(--primary);" data-zh="現在" data-en="Now">Now</div>
+              <div class="insight-desc" data-zh="當前市況適合放款,預期回報率 8-10%" data-en="Current conditions suitable for lending, expected return 8-10%">Current conditions suitable for lending, expected return 8-10%</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-label" data-zh="風險評級" data-en="RISK LEVEL">RISK LEVEL</div>
+              <div class="insight-value" style="color: var(--success);" data-zh="低" data-en="Low">Low</div>
+              <div class="insight-desc" data-zh="A級借款人違約率歷史低點 0.8%" data-en="Grade A borrower default rate at historic low 0.8%">Grade A borrower default rate at historic low 0.8%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Book and Sentiment -->
+      <div>
+        <!-- Market Sentiment Gauge -->
+        <div class="sentiment-gauge">
+          <div class="gauge-label" data-zh="市場情緒指標" data-en="MARKET SENTIMENT INDEX">MARKET SENTIMENT INDEX</div>
+          <div class="gauge-visual">
+            <div class="gauge-pointer" style="left: 68%;"></div>
+          </div>
+          <div class="gauge-labels">
+            <span data-zh="悲觀" data-en="Bearish">Bearish</span>
+            <span data-zh="中性" data-en="Neutral">Neutral</span>
+            <span data-zh="樂觀" data-en="Bullish">Bullish</span>
+          </div>
+          <div class="sentiment-value" style="color: var(--success);">68 / 100</div>
+          <div style="font-size: 11px; color: var(--text-light); margin-top: 8px;" data-zh="基於 24,582 筆用戶行為分析" data-en="Based on 24,582 user behavior analyses">Based on 24,582 user behavior analyses</div>
+        </div>
+
+        <!-- Order Book -->
+        <div class="orderbook" style="margin-top: 16px;">
+          <div class="orderbook-header">
+            <span data-zh="掛單簿 (A級)" data-en="Order Book (Grade A)">Order Book (Grade A)</span>
+            <span data-zh="實時" data-en="LIVE">LIVE</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 10px; color: var(--text-muted); font-weight: 600; padding: 6px 0; border-bottom: 1px solid var(--border);">
+            <span data-zh="利率" data-en="RATE">RATE</span>
+            <span style="text-align: right;" data-zh="金額" data-en="AMOUNT">AMOUNT</span>
+            <span style="text-align: right;" data-zh="累計" data-en="TOTAL">TOTAL</span>
+          </div>
+          <div class="orderbook-row ask">
+            <div class="orderbook-rate">9.8%</div>
+            <div class="orderbook-amount">$125K</div>
+            <div class="orderbook-total">$125K</div>
+          </div>
+          <div class="orderbook-row ask">
+            <div class="orderbook-rate">9.7%</div>
+            <div class="orderbook-amount">$248K</div>
+            <div class="orderbook-total">$373K</div>
+          </div>
+          <div class="orderbook-row ask">
+            <div class="orderbook-rate">9.6%</div>
+            <div class="orderbook-amount">$184K</div>
+            <div class="orderbook-total">$557K</div>
+          </div>
+          <div style="text-align: center; padding: 8px; background: var(--bg); border-radius: 4px; font-weight: 700; font-size: 13px; color: var(--success); margin: 4px 0;">
+            9.5%<span style="font-size: 10px; color: var(--text-muted); margin-left: 8px;" data-zh="成交價" data-en="Last">Last</span>
+          </div>
+          <div class="orderbook-row bid">
+            <div class="orderbook-rate">9.4%</div>
+            <div class="orderbook-amount">$312K</div>
+            <div class="orderbook-total">$312K</div>
+          </div>
+          <div class="orderbook-row bid">
+            <div class="orderbook-rate">9.3%</div>
+            <div class="orderbook-amount">$196K</div>
+            <div class="orderbook-total">$508K</div>
+          </div>
+          <div class="orderbook-row bid">
+            <div class="orderbook-rate">9.2%</div>
+            <div class="orderbook-amount">$275K</div>
+            <div class="orderbook-total">$783K</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FLOW DIAGRAM ══════════════════ -->
+<section class="flow-section" id="how">
+  <div class="section-header">
+    <div class="section-tag">● Platform Workflow</div>
+    <h2>From Application to Repayment<br>Fully AI-Driven</h2>
+    <p>Our intelligent system evaluates creditworthiness, matches lenders with borrowers, and dynamically adjusts interest rates to create a transparent, efficient lending ecosystem.</p>
+  </div>
+
+  <div class="flow-tabs">
+    <div class="flow-tab active" onclick="switchFlowTab('borrower')">Borrower Journey</div>
+    <div class="flow-tab" onclick="switchFlowTab('lender')">Lender Journey</div>
+    <div class="flow-tab" onclick="switchFlowTab('system')">System Matching</div>
+  </div>
+
+  <!-- BORROWER FLOW -->
+  <div class="flow-panel active" id="flow-borrower">
+    <div class="flow-grid">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-icon">🪪</div>
+        <div class="flow-title">Identity Verification</div>
+        <div class="flow-desc">KYC/AML compliance<br>Document upload<br>Biometric verification</div>
+      </div>
+      <div class="flow-step success">
+        <div class="flow-num">2</div>
+        <div class="flow-icon">🤖</div>
+        <div class="flow-title">AI Credit Scoring</div>
+        <div class="flow-desc">Bank data analysis<br>Behavioral assessment<br>Multi-factor AI model</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-icon">📝</div>
+        <div class="flow-title">Loan Application</div>
+        <div class="flow-desc">Amount & term selection<br>Purpose statement<br>Rate estimation</div>
+      </div>
+      <div class="flow-step warning">
+        <div class="flow-num">4</div>
+        <div class="flow-icon">⚡</div>
+        <div class="flow-title">Smart Matching</div>
+        <div class="flow-desc">AI lender matching<br>Dynamic rate negotiation<br>Optimal portfolio mix</div>
+      </div>
+      <div class="flow-step success">
+        <div class="flow-num">5</div>
+        <div class="flow-icon">💳</div>
+        <div class="flow-title">Funding & Repayment</div>
+        <div class="flow-desc">Auto fund disbursement<br>Scheduled auto-debit<br>Smart reminders</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LENDER FLOW -->
+  <div class="flow-panel" id="flow-lender">
+    <div class="flow-grid">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-icon">✅</div>
+        <div class="flow-title">Account Setup</div>
+        <div class="flow-desc">Investor qualification<br>Risk tolerance assessment<br>Bank account linking</div>
+      </div>
+      <div class="flow-step warning">
+        <div class="flow-num">2</div>
+        <div class="flow-icon">⚙️</div>
+        <div class="flow-title">Strategy Configuration</div>
+        <div class="flow-desc">Target interest rate<br>Risk grade preferences<br>Amount allocation</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-icon">🔍</div>
+        <div class="flow-title">Browse Opportunities</div>
+        <div class="flow-desc">AI-curated listings<br>Credit report preview<br>Risk assessment</div>
+      </div>
+      <div class="flow-step success">
+        <div class="flow-num">4</div>
+        <div class="flow-icon">🤝</div>
+        <div class="flow-title">Fund Deployment</div>
+        <div class="flow-desc">Manual or auto-invest<br>Smart diversification<br>E-contract signing</div>
+      </div>
+      <div class="flow-step success">
+        <div class="flow-num">5</div>
+        <div class="flow-icon">📈</div>
+        <div class="flow-title">Returns Management</div>
+        <div class="flow-desc">Monthly interest credit<br>Auto-reinvestment<br>Performance reporting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYSTEM FLOW -->
+  <div class="flow-panel" id="flow-system">
+    <div class="flow-grid">
+      <div class="flow-step success">
+        <div class="flow-num">1</div>
+        <div class="flow-icon">📊</div>
+        <div class="flow-title">Demand Pool Analysis</div>
+        <div class="flow-desc">Loan aggregation<br>Market rate analysis<br>Supply-demand balance</div>
+      </div>
+      <div class="flow-step warning">
+        <div class="flow-num">2</div>
+        <div class="flow-icon">🧮</div>
+        <div class="flow-title">Dynamic Rate Calculation</div>
+        <div class="flow-desc">Credit score weighting<br>Market adjustment<br>Optimal rate output</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-icon">🔗</div>
+        <div class="flow-title">Matching Engine</div>
+        <div class="flow-desc">Multi-party optimization<br>Portfolio diversification<br>Instant confirmation</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-icon">🛡️</div>
+        <div class="flow-title">Risk Monitoring</div>
+        <div class="flow-desc">Real-time anomaly detection<br>Default early warning<br>Collection workflow</div>
+      </div>
+      <div class="flow-step success">
+        <div class="flow-num">5</div>
+        <div class="flow-icon">🔄</div>
+        <div class="flow-title">Settlement</div>
+        <div class="flow-desc">Auto fund clearing<br>Platform fee deduction<br>Tax documentation</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ PAGES SHOWCASE ══════════════════ -->
+<section id="pages">
+  <div class="section-header">
+    <div class="section-tag">● Interface Design</div>
+    <h2>Every Screen Tells a Story</h2>
+    <p>Core platform interfaces designed with insights from 1,000 UX experts and 100,000 users.</p>
+  </div>
+
+  <div class="pages-grid">
+    <!-- Page 1: Dashboard -->
+    <div class="page-full">
+      <div class="mockup-tag">📊 Unified Dashboard (Lender & Borrower)</div>
+      <div class="page-mockup">
+        <div class="mockup-header">
+          <div class="browser-dots">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+          </div>
+          <div class="mockup-url">lendflow.global/dashboard</div>
+        </div>
+        <div class="mockup-content">
+          <div class="mock-header">
+            <div>
+              <div class="mock-title">Welcome back, Sarah 👋</div>
+              <div class="mock-subtitle">February 18, 2026 · Your portfolio is performing well</div>
+            </div>
+            <button class="btn btn-primary btn-sm">+ New Investment</button>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card" style="background: linear-gradient(135deg, var(--primary-bg), var(--success-bg));">
+              <div class="kpi-label">Total Invested</div>
+              <div class="kpi-value" style="color: var(--primary);">$485,200</div>
+              <div class="kpi-change up">↑ +$24,000 this month</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Avg. Interest Rate</div>
+              <div class="kpi-value" style="color: var(--success);">7.85%</div>
+              <div class="kpi-change up">↑ +0.3% vs last month</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Monthly Income</div>
+              <div class="kpi-value">$3,186</div>
+              <div class="kpi-change up">↑ +12.4%</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Default Rate</div>
+              <div class="kpi-value" style="color: var(--text-light);">0.9%</div>
+              <div class="kpi-change" style="color: var(--success);">Below market avg</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-light);">RETURNS TREND (12 MONTHS)</div>
+              <div class="chart-area">
+                <div class="chart-bar" style="height: 38%"></div>
+                <div class="chart-bar" style="height: 45%"></div>
+                <div class="chart-bar" style="height: 52%"></div>
+                <div class="chart-bar" style="height: 48%"></div>
+                <div class="chart-bar" style="height: 60%"></div>
+                <div class="chart-bar" style="height: 58%"></div>
+                <div class="chart-bar" style="height: 72%"></div>
+                <div class="chart-bar" style="height: 68%"></div>
+                <div class="chart-bar" style="height: 80%"></div>
+                <div class="chart-bar" style="height: 85%"></div>
+                <div class="chart-bar" style="height: 92%"></div>
+                <div class="chart-bar" style="height: 100%; background: var(--primary);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-light);">RISK DISTRIBUTION</div>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                  <span class="badge badge-success">Grade A</span>
+                  <span style="font-weight: 600;">62%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                  <span class="badge badge-warning">Grade B</span>
+                  <span style="font-weight: 600;">31%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                  <span class="badge badge-danger">Grade C</span>
+                  <span style="font-weight: 600;">7%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 2 & 3 Row -->
+    <div class="page-row">
+      <div>
+        <div class="mockup-tag">🏪 Loan Marketplace (Lender View)</div>
+        <div class="page-mockup">
+          <div class="mockup-header">
+            <div class="browser-dots">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            <div class="mockup-url">lendflow.global/market</div>
+          </div>
+          <div class="mockup-content">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Available Opportunities</div>
+            <div style="display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;">
+              <div class="badge badge-primary">All</div>
+              <div class="badge badge-neutral">Grade A</div>
+              <div class="badge badge-neutral">Grade B</div>
+              <div class="badge badge-neutral">SME Loans</div>
+              <div class="badge badge-neutral">High Yield >10%</div>
+            </div>
+            <div class="loan-list">
+              <div class="loan-card">
+                <div>
+                  <div class="loan-borrower">Tech Startup Inc. 🏢</div>
+                  <div class="loan-meta">$500,000 · 24 months · Business expansion <span class="badge badge-success">A+</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width: 68%"></div></div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">68% funded</div>
+                </div>
+                <div class="loan-rate">
+                  <div class="loan-rate-value">8.2%</div>
+                  <button class="btn btn-primary btn-sm" style="margin-top: 8px;">Invest</button>
+                </div>
+              </div>
+              <div class="loan-card">
+                <div>
+                  <div class="loan-borrower">James Wilson · Engineer</div>
+                  <div class="loan-meta">$45,000 · 12 months · Personal <span class="badge badge-success">A</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width: 84%"></div></div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">84% funded</div>
+                </div>
+                <div class="loan-rate">
+                  <div class="loan-rate-value">7.5%</div>
+                  <button class="btn btn-primary btn-sm" style="margin-top: 8px;">Invest</button>
+                </div>
+              </div>
+              <div class="loan-card">
+                <div>
+                  <div class="loan-borrower">Local Bakery LLC 🍰</div>
+                  <div class="loan-meta">$180,000 · 18 months · Equipment <span class="badge badge-warning">B+</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width: 42%; background: var(--warning);"></div></div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">42% funded</div>
+                </div>
+                <div class="loan-rate">
+                  <div class="loan-rate-value" style="color: var(--warning);">10.5%</div>
+                  <button class="btn btn-primary btn-sm" style="margin-top: 8px;">Invest</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="mockup-tag">🤖 AI Credit Report (Borrower View)</div>
+        <div class="page-mockup">
+          <div class="mockup-header">
+            <div class="browser-dots">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            <div class="mockup-url">lendflow.global/my-score</div>
+          </div>
+          <div class="mockup-content">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Your AI Credit Report</div>
+            <div class="score-section">
+              <div class="score-card">
+                <div class="score-number">792</div>
+                <div class="score-grade">Grade A+</div>
+                <div class="score-percentile">Top 8% globally</div>
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2);">
+                  <div style="font-size: 11px; opacity: 0.8;">Estimated Rate</div>
+                  <div style="font-size: 20px; font-weight: 800; margin-top: 4px;">6.0 – 8.0%</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px;">SCORING FACTORS</div>
+                <div class="factors-list">
+                  <div class="factor-row">
+                    <div class="factor-label">Payment History</div>
+                    <div class="factor-bar"><div class="factor-fill" style="width: 96%"></div></div>
+                    <div class="factor-value" style="color: var(--success)">96</div>
+                  </div>
+                  <div class="factor-row">
+                    <div class="factor-label">Income Stability</div>
+                    <div class="factor-bar"><div class="factor-fill" style="width: 85%"></div></div>
+                    <div class="factor-value" style="color: var(--success)">85</div>
+                  </div>
+                  <div class="factor-row">
+                    <div class="factor-label">Debt-to-Income</div>
+                    <div class="factor-bar"><div class="factor-fill" style="width: 78%; background: var(--warning);"></div></div>
+                    <div class="factor-value" style="color: var(--warning)">78</div>
+                  </div>
+                  <div class="factor-row">
+                    <div class="factor-label">Credit Age</div>
+                    <div class="factor-bar"><div class="factor-fill" style="width: 90%"></div></div>
+                    <div class="factor-value" style="color: var(--success)">90</div>
+                  </div>
+                  <div class="factor-row">
+                    <div class="factor-label">Inquiry Count</div>
+                    <div class="factor-bar"><div class="factor-fill" style="width: 72%; background: var(--warning);"></div></div>
+                    <div class="factor-value" style="color: var(--warning)">72</div>
+                  </div>
+                  <div class="factor-row">
+                    <div class="factor-label">Behavior Pattern</div>
+                    <div class="factor-bar"><div class="factor-fill" style="width: 88%"></div></div>
+                    <div class="factor-value" style="color: var(--success)">88</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 4 & 5 Row -->
+    <div class="page-row">
+      <div>
+        <div class="mockup-tag">⚙️ Lender Strategy Setup</div>
+        <div class="page-mockup">
+          <div class="mockup-header">
+            <div class="browser-dots">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            <div class="mockup-url">lendflow.global/lend/strategy</div>
+          </div>
+          <div class="mockup-content">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Configure Lending Strategy</div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                  <div style="font-size: 11px; color: var(--text-muted);">TARGET ANNUAL RATE</div>
+                  <div style="font-family: 'Manrope', sans-serif; font-size: 36px; font-weight: 800; color: var(--primary);">8.5<span style="font-size: 18px;">%</span></div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 11px; color: var(--text-muted);">Market Average</div>
+                  <div style="font-size: 16px; font-weight: 700;">7.85%</div>
+                </div>
+              </div>
+              <input type="range" min="3" max="15" value="8.5" style="width: 100%; height: 8px; background: linear-gradient(90deg, var(--success), var(--primary), var(--warning)); border-radius: 100px; outline: none;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+              <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Investment Amount</div>
+                <div style="font-size: 20px; font-weight: 700;">$50,000</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Available: $485,200</div>
+              </div>
+              <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Accepted Grades</div>
+                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                  <div class="badge badge-success">A+</div>
+                  <div class="badge badge-success">A</div>
+                  <div class="badge badge-warning">B+</div>
+                </div>
+              </div>
+            </div>
+            <div style="background: var(--success-bg); border: 1px solid var(--success); border-radius: 8px; padding: 14px;">
+              <div style="font-size: 12px; font-weight: 600; color: var(--success); margin-bottom: 6px;">🤖 AI Matching Forecast</div>
+              <div style="font-size: 12px; color: var(--text-light);">Expected match in <strong>2-4 business days</strong> with <strong>3-6 borrowers</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="mockup-tag">📅 Borrower Repayment Tracker</div>
+        <div class="page-mockup">
+          <div class="mockup-header">
+            <div class="browser-dots">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            <div class="mockup-url">lendflow.global/repayment</div>
+          </div>
+          <div class="mockup-content">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Repayment Schedule</div>
+            <div style="font-size: 12px; color: var(--text-light); margin-bottom: 16px;">$45,000 @ 7.5% APR · 12 months</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+              <div style="background: var(--danger-bg); border: 1px solid var(--danger); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: #B91C1C;">Remaining Principal</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--danger);">$28,400</div>
+              </div>
+              <div style="background: var(--success-bg); border: 1px solid var(--success); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: #047857;">Paid to Date</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--success);">$16,600</div>
+              </div>
+              <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: var(--text-muted);">Next Payment</div>
+                <div style="font-size: 18px; font-weight: 800;">$3,912</div>
+              </div>
+            </div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px;">PAYMENT TIMELINE</div>
+            <div style="display: flex; flex-direction: column; gap: 0;">
+              <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></div>
+                <div style="font-size: 11px; color: var(--text-muted); width: 40px;">Jan</div>
+                <div style="flex: 1; font-size: 13px; font-weight: 600;">$3,912</div>
+                <div class="badge badge-success">✓ Paid</div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></div>
+                <div style="font-size: 11px; color: var(--text-muted); width: 40px;">Feb</div>
+                <div style="flex: 1; font-size: 13px; font-weight: 600;">$3,912</div>
+                <div class="badge badge-success">✓ Paid</div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></div>
+                <div style="font-size: 11px; color: var(--text-muted); width: 40px;">Mar</div>
+                <div style="flex: 1; font-size: 13px; font-weight: 600;">$3,912</div>
+                <div class="badge badge-success">✓ Paid</div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></div>
+                <div style="font-size: 11px; color: var(--text-muted); width: 40px;">Apr</div>
+                <div style="flex: 1; font-size: 13px; font-weight: 600;">$3,912</div>
+                <div class="badge badge-success">✓ Paid</div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2);"></div>
+                <div style="font-size: 11px; color: var(--text-muted); width: 40px;">May</div>
+                <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--warning);">$3,912</div>
+                <div class="badge badge-warning">⚡ Due Soon</div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 10px 0; align-items: center;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border);"></div>
+                <div style="font-size: 11px; color: var(--text-muted); width: 40px;">Jun</div>
+                <div style="flex: 1; font-size: 13px; color: var(--text-muted);">$3,912</div>
+                <div class="badge badge-neutral">Upcoming</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ USER FLOWS ══════════════════ -->
+<section id="flows">
+  <div class="section-header">
+    <div class="section-tag">● User Journey Maps</div>
+    <h2>Complete User Pathways</h2>
+    <p>Detailed step-by-step flows for lenders and borrowers with AI assistance at every stage.</p>
+  </div>
+
+  <div class="flows-grid">
+    <!-- BORROWER FLOW -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon">🙋‍♂️</div>
+        <div>
+          <div class="flow-card-title">Borrower Journey</div>
+          <div class="flow-card-subtitle">From signup to fund receipt</div>
+        </div>
+      </div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Sign Up & Verification</div>
+            <div class="step-desc">Create account, complete KYC/AML, biometric verification</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Data Authorization</div>
+            <div class="step-desc">Grant access to bank statements, credit bureau</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">AI Credit Assessment</div>
+            <div class="step-desc">6-factor analysis, score generation in 5 minutes</div>
+          </div>
+          <div class="step-tag tag-ai">AI</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-title">View Rate Range</div>
+            <div class="step-desc">System displays eligible rate range & loan limit</div>
+          </div>
+          <div class="step-tag tag-ai">AI</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <div class="step-title">Submit Loan Application</div>
+            <div class="step-desc">Enter amount, term, purpose, repayment method</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">6</div>
+          <div class="step-content">
+            <div class="step-title">Matching Queue</div>
+            <div class="step-desc">AI matches optimal lender portfolio, real-time updates</div>
+          </div>
+          <div class="step-tag tag-ai">AI</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">7</div>
+          <div class="step-content">
+            <div class="step-title">Contract Signing</div>
+            <div class="step-desc">Review terms, sign digital loan agreement</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">8</div>
+          <div class="step-content">
+            <div class="step-title">Fund Disbursement</div>
+            <div class="step-desc">Transfer to bank account within 1 business day</div>
+          </div>
+          <div class="step-tag tag-system">System</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">9</div>
+          <div class="step-content">
+            <div class="step-title">Auto Repayment</div>
+            <div class="step-desc">Monthly auto-debit with 3-day advance reminder</div>
+          </div>
+          <div class="step-tag tag-system">System</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LENDER FLOW -->
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div class="flow-card-icon" style="background: var(--warning-bg);">💼</div>
+        <div>
+          <div class="flow-card-title">Lender Journey</div>
+          <div class="flow-card-subtitle">From deposit to earning returns</div>
+        </div>
+      </div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">1</div>
+          <div class="step-content">
+            <div class="step-title">Investor Onboarding</div>
+            <div class="step-desc">Complete registration, KYC verification</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">2</div>
+          <div class="step-content">
+            <div class="step-title">Risk Tolerance Assessment</div>
+            <div class="step-desc">Complete suitability questionnaire</div>
+          </div>
+          <div class="step-tag tag-system">System</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">3</div>
+          <div class="step-content">
+            <div class="step-title">Fund Deposit</div>
+            <div class="step-desc">Bank transfer or card deposit to platform wallet</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">4</div>
+          <div class="step-content">
+            <div class="step-title">Strategy Configuration</div>
+            <div class="step-desc">Set target rate, risk grades, allocation amount</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">5</div>
+          <div class="step-content">
+            <div class="step-title">Choose Investment Mode</div>
+            <div class="step-desc">Manual selection or AI auto-diversification</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">6</div>
+          <div class="step-content">
+            <div class="step-title">AI Recommendations</div>
+            <div class="step-desc">Curated list of matching loan opportunities</div>
+          </div>
+          <div class="step-tag tag-ai">AI</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">7</div>
+          <div class="step-content">
+            <div class="step-title">Confirm Investment</div>
+            <div class="step-desc">Review terms, sign lending agreement</div>
+          </div>
+          <div class="step-tag tag-user">User</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">8</div>
+          <div class="step-content">
+            <div class="step-title">Match Confirmation</div>
+            <div class="step-desc">App notification & email confirmation</div>
+          </div>
+          <div class="step-tag tag-system">System</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">9</div>
+          <div class="step-content">
+            <div class="step-title">Monthly Returns</div>
+            <div class="step-desc">Auto principal + interest credit, reinvest option</div>
+          </div>
+          <div class="step-tag tag-system">System</div>
+        </div>
+        <div class="step-item">
+          <div class="step-number" style="background: var(--warning-bg); color: #B45309;">10</div>
+          <div class="step-content">
+            <div class="step-title">Portfolio Reporting</div>
+            <div class="step-desc">Performance analytics, tax documentation</div>
+          </div>
+          <div class="step-tag tag-ai">AI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ RATE ENGINE ══════════════════ -->
+<section id="engine" style="background: white;">
+  <div class="section-header">
+    <div class="section-tag">● Dynamic Rate Engine</div>
+    <h2>AI Interest Rate Calculation</h2>
+    <p>Transparent, auditable rate computation based on credit scores, market dynamics, and risk models.</p>
+  </div>
+
+  <div class="engine-grid">
+    <div class="formula-card">
+      <h3 data-zh="📐 利率計算公式" data-en="📐 Rate Calculation Formula">📐 Rate Calculation Formula</h3>
+      <div class="code-block">
+<span class="code-comment">// Final Rate = Weighted Calculation (Range: 6-18%)</span>
+<span class="code-fn">Final_Rate</span> = <span class="code-var">Base_Rate</span>
+  + <span class="code-var">Credit_Spread</span>(<span class="code-var">score</span>)
+  + <span class="code-var">Market_Premium</span>
+  + <span class="code-var">Duration_Factor</span>
+
+<span class="code-comment">// Credit Spread (inverse relationship)</span>
+<span class="code-fn">Credit_Spread</span> = <span class="code-num">18</span> - (<span class="code-var">score</span> / <span class="code-num">100</span>) * <span class="code-num">14</span>
+
+<span class="code-comment">// Market Premium = supply/demand function</span>
+<span class="code-fn">Market_Premium</span> = <span class="code-fn">f</span>(<span class="code-var">demand</span> / <span class="code-var">supply</span>)
+
+<span class="code-comment">// Example: Score 792 → Grade A+</span>
+<span class="code-comment">// Base 5% + Spread 1% = 6% minimum rate</span>
+      </div>
+      <div style="background: var(--success-bg); border: 1px solid var(--success); border-radius: 8px; padding: 16px;">
+        <div style="font-size: 13px; font-weight: 700; color: #047857; margin-bottom: 12px;" data-zh="等級 → 利率對照" data-en="Grade → Rate Mapping">Grade → Rate Mapping</div>
+        <div class="grade-table">
+          <div class="grade-row">
+            <div class="grade-badge grade-A">A+ (750+)</div>
+            <div class="grade-range" style="color: var(--success);">6.0 – 9.0%</div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-badge grade-A">A (700-749)</div>
+            <div class="grade-range" style="color: var(--success);">8.5 – 11.5%</div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-badge grade-B">B+ (650-699)</div>
+            <div class="grade-range" style="color: var(--warning);">11.0 – 14.5%</div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-badge grade-B">B (600-649)</div>
+            <div class="grade-range" style="color: var(--warning);">13.5 – 16.5%</div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-badge grade-C">C (550-599)</div>
+            <div class="grade-range" style="color: var(--danger);">15.5 – 18.0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-card">
+      <h3>⚖️ AI Scoring Factor Weights</h3>
+      <div class="weights-list">
+        <div class="weight-item">
+          <div class="weight-label">Payment History</div>
+          <div class="weight-bar"><div class="weight-fill" style="width: 35%"></div></div>
+          <div class="weight-pct">35%</div>
+        </div>
+        <div class="weight-item">
+          <div class="weight-label">Debt-to-Income Ratio</div>
+          <div class="weight-bar"><div class="weight-fill" style="width: 25%"></div></div>
+          <div class="weight-pct">25%</div>
+        </div>
+        <div class="weight-item">
+          <div class="weight-label">Credit Account Age</div>
+          <div class="weight-bar"><div class="weight-fill" style="width: 15%"></div></div>
+          <div class="weight-pct">15%</div>
+        </div>
+        <div class="weight-item">
+          <div class="weight-label">Credit Inquiries</div>
+          <div class="weight-bar"><div class="weight-fill" style="width: 10%"></div></div>
+          <div class="weight-pct">10%</div>
+        </div>
+        <div class="weight-item">
+          <div class="weight-label">Platform Behavior</div>
+          <div class="weight-bar"><div class="weight-fill" style="width: 10%"></div></div>
+          <div class="weight-pct">10%</div>
+        </div>
+        <div class="weight-item">
+          <div class="weight-label">Social Signals</div>
+          <div class="weight-bar"><div class="weight-fill" style="width: 5%"></div></div>
+          <div class="weight-pct">5%</div>
+        </div>
+      </div>
+      <div style="margin-top: 24px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+        <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">🔄 Dynamic Matching Mechanism</div>
+        <div style="font-size: 13px; color: var(--text-light); line-height: 1.7;">
+          When lender target rate <strong style="color: var(--text);">≥ AI minimum rate</strong>, system auto-matches. If supply is insufficient, platform dynamically adjusts market premium to ensure equilibrium. All rate calculations are <strong style="color: var(--primary);">blockchain-recorded</strong> and auditable.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="logo-icon">🌊</div>
+          LendFlow
+        </div>
+        <p class="footer-desc">
+          AI-powered global P2P lending platform connecting lenders and borrowers directly. Transparent, efficient, and fair financing for individuals and SMEs worldwide.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Products</h4>
+        <ul>
+          <li><a href="#">Personal Loans</a></li>
+          <li><a href="#">SME Financing</a></li>
+          <li><a href="#">Lender Platform</a></li>
+          <li><a href="#">Rate Calculator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">How It Works</a></li>
+          <li><a href="#">Risk Disclosure</a></li>
+          <li><a href="#">Fee Structure</a></li>
+          <li><a href="#">Compliance</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">AML Policy</a></li>
+          <li><a href="#">Cookie Settings</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-legal">
+        © 2026 LendFlow Global Ltd. · Regulated by FCA (UK), SEC (US), MAS (SG) · Member FDIC
+      </div>
+      <div class="footer-badges">
+        <div class="security-badge">256-bit SSL</div>
+        <div class="security-badge">ISO 27001</div>
+        <div class="security-badge">SOC 2 Type II</div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Language switching system
+  let currentLang = 'en';
+  
+  function switchLang(lang) {
+    currentLang = lang;
+    
+    // Update button states
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Update all bilingual elements
+    document.querySelectorAll('[data-zh][data-en]').forEach(el => {
+      const text = lang === 'zh' ? el.getAttribute('data-zh') : el.getAttribute('data-en');
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = text;
+      } else {
+        el.textContent = text;
+      }
+    });
+    
+    // Update HTML lang attribute
+    document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+  }
+
+  // Flow tabs
+  function switchFlowTab(type) {
+    document.querySelectorAll('.flow-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.flow-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('flow-' + type).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Generate candlestick chart
+  function generateCandlestickChart() {
+    const candleChart = document.getElementById('candleChart');
+    const volumeChart = document.getElementById('volumeChart');
+    
+    if (!candleChart || !volumeChart) return;
+    
+    // Sample data for 30 days
+    const data = [
+      { open: 9.1, high: 9.4, low: 9.0, close: 9.3, volume: 65 },
+      { open: 9.3, high: 9.5, low: 9.2, close: 9.2, volume: 58 },
+      { open: 9.2, high: 9.3, low: 8.9, close: 9.0, volume: 72 },
+      { open: 9.0, high: 9.2, low: 8.8, close: 9.1, volume: 68 },
+      { open: 9.1, high: 9.4, low: 9.0, close: 9.3, volume: 75 },
+      { open: 9.3, high: 9.6, low: 9.2, close: 9.5, volume: 82 },
+      { open: 9.5, high: 9.7, low: 9.4, close: 9.4, volume: 78 },
+      { open: 9.4, high: 9.5, low: 9.1, close: 9.2, volume: 65 },
+      { open: 9.2, high: 9.4, low: 9.1, close: 9.3, volume: 70 },
+      { open: 9.3, high: 9.6, low: 9.2, close: 9.5, volume: 88 },
+      { open: 9.5, high: 9.8, low: 9.4, close: 9.7, volume: 92 },
+      { open: 9.7, high: 9.9, low: 9.5, close: 9.6, volume: 85 },
+      { open: 9.6, high: 9.7, low: 9.3, close: 9.4, volume: 72 },
+      { open: 9.4, high: 9.6, low: 9.3, close: 9.5, volume: 78 },
+      { open: 9.5, high: 9.8, low: 9.4, close: 9.7, volume: 90 },
+      { open: 9.7, high: 10.0, low: 9.6, close: 9.8, volume: 95 },
+      { open: 9.8, high: 10.1, low: 9.7, close: 9.9, volume: 88 },
+      { open: 9.9, high: 10.2, low: 9.8, close: 10.0, volume: 100 },
+      { open: 10.0, high: 10.1, low: 9.7, close: 9.8, volume: 82 },
+      { open: 9.8, high: 9.9, low: 9.5, close: 9.6, volume: 75 },
+      { open: 9.6, high: 9.8, low: 9.5, close: 9.7, volume: 78 },
+      { open: 9.7, high: 10.0, low: 9.6, close: 9.8, volume: 85 },
+      { open: 9.8, high: 10.1, low: 9.7, close: 9.9, volume: 92 },
+      { open: 9.9, high: 10.0, low: 9.6, close: 9.7, volume: 80 },
+      { open: 9.7, high: 9.9, low: 9.5, close: 9.6, volume: 73 },
+      { open: 9.6, high: 9.8, low: 9.4, close: 9.5, volume: 70 },
+      { open: 9.5, high: 9.7, low: 9.4, close: 9.6, volume: 75 },
+      { open: 9.6, high: 9.8, low: 9.5, close: 9.7, volume: 78 },
+      { open: 9.7, high: 9.9, low: 9.6, close: 9.8, volume: 82 },
+      { open: 9.8, high: 10.0, low: 9.7, close: 9.5, volume: 88 }
+    ];
+    
+    const maxHigh = Math.max(...data.map(d => d.high));
+    const minLow = Math.min(...data.map(d => d.low));
+    const range = maxHigh - minLow;
+    const maxVolume = Math.max(...data.map(d => d.volume));
+    
+    candleChart.innerHTML = '';
+    volumeChart.innerHTML = '';
+    
+    data.forEach((d, i) => {
+      const isBullish = d.close >= d.open;
+      const bodyHeight = Math.abs(d.close - d.open) / range * 200;
+      const bodyBottom = (Math.max(d.open, d.close) - minLow) / range * 200;
+      const wickTop = (maxHigh - d.high) / range * 200;
+      const wickBottom = (d.low - minLow) / range * 200;
+      const wickHeight = 200 - wickTop - wickBottom;
+      
+      const candle = document.createElement('div');
+      candle.className = 'candle';
+      candle.innerHTML = `
+        <div class="candle-wick" style="top: ${wickTop}px; height: ${wickHeight}px;"></div>
+        <div class="candle-body ${isBullish ? 'bullish' : 'bearish'}" 
+             style="height: ${bodyHeight}px; bottom: ${bodyBottom}px;"></div>
+      `;
+      
+      candle.title = `O: ${d.open}% H: ${d.high}% L: ${d.low}% C: ${d.close}%`;
+      candleChart.appendChild(candle);
+      
+      // Volume bar
+      const volBar = document.createElement('div');
+      volBar.className = d.volume > 85 ? 'volume-bar high' : 'volume-bar';
+      volBar.style.height = (d.volume / maxVolume * 100) + '%';
+      volumeChart.appendChild(volBar);
+    });
+  }
+
+  // Intersection Observer for fade-up animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.page-mockup, .flow-card, .formula-card, .flow-step').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    generateCandlestickChart();
+    
+    // Animate sentiment gauge pointer
+    setTimeout(() => {
+      const pointer = document.querySelector('.gauge-pointer');
+      if (pointer) {
+        pointer.style.left = '68%';
+      }
+    }, 500);
+  });
+</script>
+</body>
+</html>
